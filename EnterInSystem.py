@@ -18,12 +18,23 @@ class Users(Base):
     id = Column(Integer, primary_key=True)
     Login = Column(String)
     Password = Column(String)
-    Opis = Column(String)
 
-    def __init__(self, Login, Password, Opis):
+    def __init__(self, Login, Password):
         self.Login = Login
         self.Password = Password
-        self.Opis = Opis
+
+
+class Notes(Base):
+    __tablename__ = 'Notes'
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    body = Column(String)
+    Users_id = Column(Integer, ForeignKey('Users.id'))
+    Users = relationship(
+        Users,
+        backref=backref('Notes',
+                        uselist=True,
+                        cascade='delete,all'))
 
 
 class Sessions(Base):
@@ -44,60 +55,112 @@ class Sessions(Base):
 
 class DatabaseFuction(object):
     def __init__(self):
-        Session = sessionmaker(bind=engine)
-        self.session = Session()
+        self.Session = sessionmaker(bind=engine)
 
-    def Insert(self, Log, Pass, Str):
-        NewUser = Users(Log, Pass, Str)
-        self.session.add(NewUser)
-        self.session.commit()
+    def Insert(self, Log, Pass):
+        NewUser = Users(Log, Pass)
+        session = self.Session()
+        session.add(NewUser)
+        session.commit()
+        session.close()
 
     def Drop(self):
-        self.session.query.delete()
+        session = self.Session()
+        session.query.delete()
+        session.close()
 
     def LogOut(self, Log):
-        for instance in self.session.query(Sessions.start_time, Sessions.finish_time, Sessions.id):
+        session = self.Session()
+        for instance in session.query(Sessions.start_time, Sessions.finish_time, Sessions.id):
             if (None == instance.finish_time):
-                Sesion = self.session.query(Sessions).filter_by(id=instance.id).first()
-                Sesion.finish_time = datetime.now()
-                self.session.add(Sesion)
-                self.session.commit()
+                SesionUser = session.query(Sessions).filter_by(id=instance.id).first()
+                SesionUser.finish_time = datetime.now()
+                session.add(SesionUser)
+                session.commit()
+        session.close()
 
     def Login(self, Log, Pass):
         Exist = False
         data = datetime.now()
-        for instance in self.session.query(Users.Login, Users.Password, Users.id):
+        session = self.Session()
+        for instance in session.query(Users.Login, Users.Password, Users.id):
             if ((instance.Login == Log) and (instance.Password == Pass)):
-                Session = Sessions(start_time=datetime.now(), finish_time=None,
-                                   Users=self.session.query(Users).filter_by(id=instance.id).first())
-                self.session.add(Session)
-                self.session.commit()
+                SesionUser = Sessions(start_time=datetime.now(), finish_time=None,
+                                      Users=session.query(Users).filter_by(id=instance.id).first())
+                session.add(SesionUser)
+                session.commit()
                 Exist = True
+        session.close()
         return Exist
 
-    def Register(self, Log, Pass, Str):
+    def addNote(self, login, title, body):
+        session = self.Session()
+        userId = session.query(Users).filter_by(Login=login).first()
+        Note = Notes(title=title, body=body, Users=userId)
+        session.add(Note)
+        session.commit()
+        session.close()
+
+    def getNotes(self, login):
+        session = self.Session()
+        userId = session.query(Users).filter_by(Login=login).first()
+        noteList = session.query(Notes).filter_by(Users=userId)
+        session.close()
+        return noteList
+
+    def getNote(self, id):
+        session = self.Session()
+        note = session.query(Notes).filter_by(id=id).first()
+        session.close()
+        return note
+
+    def delNote(self, id):
+        session = self.Session()
+        session.delete(session.query(Notes).filter_by(id=id).first())
+        session.commit()
+        session.close()
+
+    def Register(self, Log, Pass):
+        session = self.Session()
         Exist = False
-        for instance in self.session.query(Users.Login):
+        for instance in session.query(Users.Login):
             if (instance.Login == Log):
                 Exist = True
 
         if Exist:
+            session.close()
             return False
         else:
-            NewUser = Users(Log, Pass, Str)
-            self.session.add(NewUser)
-            self.session.commit()
+            NewUser = Users(Log, Pass)
+            session.add(NewUser)
+            session.commit()
+            session.close()
             return True
+        session.close()
 
 
-def LogOutUser(login):
-    DBase = DatabaseFuction()
+def addNote(DBase, login, title, body):
+    DBase.addNote(login, title, body)
+
+
+def getNotes(DBase, login):
+    return DBase.getNotes(login)
+
+
+def getNote(DBase, id):
+    return DBase.getNote(id)
+
+
+def delNote(DBase, id):
+    DBase.delNote(id)
+
+
+def LogOutUser(DBase, login):
     DBase.LogOut(login)
-    return "User: " + login + " Logout"
+    return True
 
 
-def LoginUser(login, password):
-    DBase = DatabaseFuction()
+def LoginUser(DBase, login, password):
     result = DBase.Login(login, password)
     if result:
         return "Login success"
@@ -105,26 +168,24 @@ def LoginUser(login, password):
         return "Wrong login password"
 
 
-def RegisterUser(login, password, Opis):
-    DBase = DatabaseFuction()
-    result = DBase.Register(login, password, Opis)
+def RegisterUser(DBase, login, password):
+    result = DBase.Register(login, password)
     if result:
         return "Register success"
     else:
         return "User already exists"
 
 
-def FullDB(login, password, Opis):
-    Base.metadata.create_all(engine)
-    DBase = DatabaseFuction()
-    DBase.Insert(login, password, Opis)
+def FullDB(DBase, login, password):
+    DBase.Insert(login, password)
+
 
 def createBd():
     Base.metadata.create_all(engine)
+    DBase = DatabaseFuction()
+    return DBase
 
 
 def DropTable():
-    Base.metadata.create_all(engine)
     Users.__table__.drop(engine)
     Sessions.__table__.drop(engine)
-
