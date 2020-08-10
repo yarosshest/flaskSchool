@@ -14,11 +14,30 @@
     <title>Личный кабинет</title>
 </head>
 <body>
-<form>
+<form method="post">
     <div class="card bg-dark text-white">
         <img class="card-img" src="https://s16.stc.all.kpcdn.net/share/i/12/10993838/inx960x640.jpg" alt="Card image">
         <div class="card-img-overlay">
             <p class="text-center" class="font-weight-bold" class="text-primary"><font size="50" color="blue" face="comic sans" padding="2px" style=" background-color: #E1F896 ">Вы вошли</p>
+
+            <div class="container">
+                <div class="row row-cols-1 row-cols-md-3">
+                    {% for note in notes %}
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header">
+                                <h4 class="my-0 font-weight-normal">{{ note.body }}</h4>
+                            </div>
+                            <div class="card-body">
+                                <p>{{note.body}}</p>
+                                <button class="btn btn-secondary" type="submit" name="red" value="{{ note.id }}">Редактировать</button>
+                                <button class="btn btn-danger" type="submit" name="del" value="{{ note.id }}">Удалить</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <a class="btn btn-primary" href="/NoteAd" role="button">Добавить заметку</a>
+            <button class="btn btn-primary" type="submit" name="exit" value="exit">Выйти</button>
   </div>
 </div>
 </form>

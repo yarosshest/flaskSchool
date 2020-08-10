@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+		<style type="text/css">
+			.container {
+				width: 70%;
+				margin-top: 20px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+    <title>Заметка</title>
+</head>
+<body>
+<form method="post">
+    <div class="mb-3">
+        <label for="title">Заголовок</label>
+        <input type="text" class="form-control" name="title" required value="{{ title }}">
+        <div class="invalid-feedback" style="width: 100%;">Заголовок обязателен</div>
+    </div>
+    <div class="mb-3">
+        <label for="body">Записка</label>
+        <textarea type="text" class="form-control" name="body"  required rows="6" >{{ body }}</textarea>
+        <div class="invalid-feedback" style="width: 100%;">Ну напиши хоть что-нибудь</div>
+    </div>
+    <hr class="mb-4">
+    <button class="btn btn-primary btn-lg btn-block" title="submit">Добивить записку</button>
+</form>
+</body>
+</html>
